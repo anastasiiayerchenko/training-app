@@ -1,0 +1,64 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Compile SQLite
+        run: gcc -c db/sqlite3.c -o db/sqlite3.o
+
+      - name: Build application
+        run: g++ -std=c++17 main.cpp db/sqlite3.o -o app -lpthread -ldl
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: training-app
+          path: app
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Compile SQLite
+        run: gcc -c db/sqlite3.c -o db/sqlite3.o
+
+      - name: Build application
+        run: g++ -std=c++17 main.cpp db/sqlite3.o -o app -lpthread -ldl
+
+      - name: Run unit tests
+        run: |
+          echo "5" | ./app 2>&1 | tee test_output.txt
+          PASSED=$(grep -c "SUCCESS" test_output.txt)
+          FAILED=$(grep -c "FAILED" test_output.txt || true)
+          echo "Tests passed: $PASSED"
+          echo "Tests failed: $FAILED"
+          if [ "$FAILED" -gt 0 ]; then exit 1; fi
+
+  docker:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t training-app .
+
+      - name: Verify Docker image
+        run: docker run --rm training-app echo "Docker image OK"

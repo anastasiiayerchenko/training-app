@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  # Blue-Green Deployment Strategy
+  app-blue:
+    build: .
+    container_name: training-app-blue
+    stdin_open: true
+    tty: true
+    volumes:
+      - db-data:/app/db
+
+  app-green:
+    build: .
+    container_name: training-app-green
+    stdin_open: true
+    tty: true
+    volumes:
+      - db-data:/app/db
+    profiles:
+      - green
+
+volumes:
+  db-data:

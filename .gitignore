@@ -1,0 +1,12 @@
+# Build
+app
+*.o
+*.out
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
