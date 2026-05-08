@@ -30,8 +30,21 @@ public:
     }
     void addExercise(IExercise* e) { exercises.push_back(e); }
     string getType() const { return type; }
+    string getDate() const { return date; }
     size_t getExerciseCount() const { return exercises.size(); }
     IExercise* getExercise(size_t index) const { return exercises[index]; }
+
+    virtual json toJson() const {
+        json j;
+        j["date"] = date;
+        j["type"] = type;
+        json exArr = json::array();
+        for (size_t i = 0; i < exercises.size(); i++) {
+            exArr.push_back(exercises[i]->toJson());
+        }
+        j["exercises"] = exArr;
+        return j;
+    }
     
     virtual ~Training() {
         for (size_t i = 0; i < exercises.size(); i++) {
@@ -47,6 +60,11 @@ private:
 public:
     StrengthTraining(string d, string m) : Training(d, "Strength") { muscle = m; }
     string getTitle() const override { return "[" + date + "] StrengthTraining (" + muscle + "):"; }
+    json toJson() const override {
+        json j = Training::toJson();
+        j["muscle"] = muscle;
+        return j;
+    }
 };
 
 #endif

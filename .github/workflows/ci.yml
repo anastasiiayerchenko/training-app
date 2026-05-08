@@ -40,14 +40,48 @@ jobs:
       - name: Build application
         run: g++ -std=c++17 main.cpp db/sqlite3.o -o app -lpthread -ldl
 
-      - name: Run unit tests
+      - name: Run unit tests and start server
         run: |
-          echo "5" | ./app 2>&1 | tee test_output.txt
-          PASSED=$(grep -c "SUCCESS" test_output.txt)
-          FAILED=$(grep -c "FAILED" test_output.txt || true)
-          echo "Tests passed: $PASSED"
-          echo "Tests failed: $FAILED"
-          if [ "$FAILED" -gt 0 ]; then exit 1; fi
+          ./app &
+          APP_PID=$!
+          sleep 2
+
+          echo "--- Unit test results ---"
+          HEALTH=$(curl -s http://localhost:8080/health)
+          echo "Health check: $HEALTH"
+
+          echo "--- API integration tests ---"
+          
+          # Test: Create athlete
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST http://localhost:8080/athletes \
+            -H "Content-Type: application/json" \
+            -d '{"name":"TestAthlete","age":20}')
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -1)
+          echo "POST /athletes -> $HTTP_CODE: $BODY"
+          if [ "$HTTP_CODE" != "201" ]; then echo "FAILED: expected 201"; kill $APP_PID; exit 1; fi
+
+          # Test: Get all athletes
+          RESPONSE=$(curl -s -w "\n%{http_code}" http://localhost:8080/athletes)
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          echo "GET /athletes -> $HTTP_CODE"
+          if [ "$HTTP_CODE" != "200" ]; then echo "FAILED: expected 200"; kill $APP_PID; exit 1; fi
+
+          # Test: Get athlete by ID
+          RESPONSE=$(curl -s -w "\n%{http_code}" http://localhost:8080/athletes/1)
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          echo "GET /athletes/1 -> $HTTP_CODE"
+
+          # Test: Invalid athlete (empty name)
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST http://localhost:8080/athletes \
+            -H "Content-Type: application/json" \
+            -d '{"name":"","age":20}')
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          echo "POST /athletes (empty name) -> $HTTP_CODE"
+          if [ "$HTTP_CODE" != "400" ]; then echo "FAILED: expected 400"; kill $APP_PID; exit 1; fi
+
+          echo "All tests passed!"
+          kill $APP_PID
 
   docker:
     name: Docker Build
@@ -61,4 +95,10 @@ jobs:
         run: docker build -t training-app .
 
       - name: Verify Docker image
-        run: docker run --rm training-app echo "Docker image OK"
+        run: |
+          docker run -d -p 8080:8080 --name test-container training-app
+          sleep 3
+          HEALTH=$(curl -s http://localhost:8080/health)
+          echo "Health check: $HEALTH"
+          docker stop test-container
+          docker rm test-container

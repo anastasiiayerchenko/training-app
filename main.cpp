@@ -1,4 +1,5 @@
 #include "include/App.h"
+#include "include/ApiController.h"
 
 
 class MockDatabase : public IDatabase {
@@ -15,7 +16,7 @@ public:
     }
     void addTraining(int athlete_id, string type, string muscle, string date, int exp) override {}
     void fillTraining(Training* tr, string muscle, int exp) override {}
-    void showAllAthletes() override {}
+    vector<AthleteData> getAllAthletes() override { return vector<AthleteData>(); }
     vector<Training*> getAthleteTrainings(int athlete_id) override { return vector<Training*>(); }
 };
 
@@ -110,8 +111,9 @@ int main() {
 
     TrainingService* appService = container.resolve<TrainingService>();
 
-    TrainingApp consoleApp(appService);
-    consoleApp.run();
+    ApiController api(appService);
+    api.setupRoutes();
+    api.start(8080);
 
     return 0;
 }

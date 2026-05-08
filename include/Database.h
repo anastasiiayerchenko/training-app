@@ -9,13 +9,19 @@
 #include <vector>
 using namespace std;
 
+struct AthleteData {
+    int id;
+    string name;
+    int age;
+};
+
 class IDatabase {
 public:
   virtual int addAthlete(string name, int age) = 0;
   virtual void addTraining(int athlete_id, string type, string muscle,
                            string date, int exp) = 0;
   virtual void fillTraining(Training *tr, string muscle, int exp) = 0;
-  virtual void showAllAthletes() = 0;
+  virtual vector<AthleteData> getAllAthletes() = 0;
   virtual vector<Training *> getAthleteTrainings(int athlete_id) = 0;
   virtual string getAthleteName(int id) = 0;
   virtual ~IDatabase() {}
@@ -26,10 +32,6 @@ private:
   sqlite3 *db;
 
 public:
-  struct AthleteData {
-    int id;
-    string name;
-  };
   SqliteDatabase(string path) { sqlite3_open(path.c_str(), &db); }
   ~SqliteDatabase() { sqlite3_close(db); }
 
@@ -71,20 +73,19 @@ public:
     sqlite3_finalize(stmt);
   }
 
-  void showAllAthletes() override {
+  vector<AthleteData> getAllAthletes() override {
+    vector<AthleteData> athletes;
     sqlite3_stmt *stmt;
     sqlite3_prepare_v2(db, "SELECT id, name FROM athletes;", -1, &stmt, 0);
-    bool hasAthlete = false;
     while (sqlite3_step(stmt) == SQLITE_ROW) {
-      hasAthlete = true;
       AthleteData a;
       a.id = sqlite3_column_int(stmt, 0);
       a.name = (const char *)sqlite3_column_text(stmt, 1);
-      cout << "ID: " << a.id << " | Name: " << a.name << endl;
+      a.age = 0;
+      athletes.push_back(a);
     }
-    if (!hasAthlete)
-      cout << "No athletes yet!\n";
     sqlite3_finalize(stmt);
+    return athletes;
   }
 
   vector<Training *> getAthleteTrainings(int athlete_id) override {

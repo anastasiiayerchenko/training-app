@@ -25,7 +25,7 @@ public:
         db->addTraining(athlete_id, type, muscle, date, exp);
     }
     void fillTrainingData(Training* tr, string muscle, int exp) { db->fillTraining(tr, muscle, exp); }
-    void showAthletes() { db->showAllAthletes(); }
+    vector<AthleteData> getAllAthletes() { return db->getAllAthletes(); }
     vector<Training*> getTrainings(int id) { return db->getAthleteTrainings(id); }
     string getAthleteName(int id) { return db->getAthleteName(id); }
 };

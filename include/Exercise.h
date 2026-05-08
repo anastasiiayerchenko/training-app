@@ -3,13 +3,16 @@
 
 #include <iostream>
 #include <string>
+#include "json.hpp"
 using namespace std;
+using json = nlohmann::json;
 
 
 class IExercise {
 public:
     virtual string getName() const = 0;
     virtual void printDetails(ostream& out) const = 0; 
+    virtual json toJson() const = 0;
     virtual ~IExercise() {}
 };
 
@@ -24,6 +27,9 @@ public:
     }
     string getName() const override { return name; }
     void printDetails(ostream& out) const override { out << sets << "x" << reps; }
+    json toJson() const override {
+        return json{{"name", name}, {"type", "Strength"}, {"sets", sets}, {"reps", reps}};
+    }
 };
 
 
@@ -36,6 +42,9 @@ public:
     }
     string getName() const override { return name; }
     void printDetails(ostream& out) const override { out << duration; }
+    json toJson() const override {
+        return json{{"name", name}, {"type", "Cardio"}, {"duration", duration}};
+    }
 };
 
 
