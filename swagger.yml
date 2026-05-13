@@ -1,0 +1,102 @@
+openapi: 3.0.3
+info:
+  title: Personalized Training System API
+  description: C++ REST microservice for registering athletes and creating personalized training programs.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Local server
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              example: { "status": "ok" }
+
+  /athletes:
+    get:
+      summary: List all athletes
+      responses:
+        '200':
+          description: A list of athletes
+    post:
+      summary: Register a new athlete
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Nazar
+                age:
+                  type: integer
+                  example: 20
+      responses:
+        '201':
+          description: Created
+
+  /athletes/{id}:
+    get:
+      summary: Get athlete by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Athlete details
+        '404':
+          description: Not found
+
+  /athletes/{id}/trainings:
+    get:
+      summary: Get training history
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: A list of trainings
+    post:
+      summary: Create a training
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                  example: Strength
+                muscle:
+                  type: string
+                  example: chest
+                date:
+                  type: string
+                  example: 01-01-2026
+                exp:
+                  type: integer
+                  example: 2
+      responses:
+        '201':
+          description: Created

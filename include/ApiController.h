@@ -19,11 +19,39 @@ public:
     ApiController(TrainingService* srv) { service = srv; }
 
     void setupRoutes() {
+        // CORS-заголовки до кожної відповіді сервера
+        server.set_default_headers({
+            {"Access-Control-Allow-Origin", "*"},
+            {"Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS"},
+            {"Access-Control-Allow-Headers", "Content-Type"}
+        });
+
+        // OPTIONS-запити
+        server.Options(".*", [](const httplib::Request&, httplib::Response& res) {
+            res.status = 200;
+        });
 
         // Health check
         server.Get("/health", [](const httplib::Request&, httplib::Response& res) {
             json response = {{"status", "ok"}};
             res.set_content(response.dump(), "application/json");
+        });
+
+        // Swagger
+        server.Get("/swagger.yml", [](const httplib::Request&, httplib::Response& res) {
+            std::ifstream file("swagger.yml");
+            if (file.is_open()) {
+                std::string content = "";
+                std::string line;
+                while (std::getline(file, line)) {
+                    content += line + "\n";
+                }
+                file.close();
+                res.set_content(content, "text/yaml");
+            } else {
+                res.status = 404;
+                res.set_content("Swagger file not found", "text/plain");
+            }
         });
 
         // POST /athletes — register new athlete
