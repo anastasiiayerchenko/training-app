@@ -46,11 +46,13 @@ jobs:
       - name: Build and Start Containers
         run: |
           docker-compose up --build -d
-          sleep 5
+          sleep 10
 
       - name: Health Checks
         run: |
-          curl -s -f http://localhost:8082/health || exit 1
-          curl -s -f http://localhost:8080/health || exit 1
-          curl -s -f http://localhost:8081/health || exit 1
+          docker-compose ps
+          docker-compose logs
+          curl -v http://localhost:8082/health || exit 1
+          curl -v http://localhost:8080/health || exit 1
+          curl -v http://localhost:8081/health || exit 1
           echo "All services are up and running!"
