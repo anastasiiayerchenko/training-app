@@ -45,6 +45,8 @@ jobs:
 
       - name: Build and Start Containers
         run: |
+          sudo mkdir -p /etc/letsencrypt/live/strivio-training.space
+          sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/letsencrypt/live/strivio-training.space/privkey.pem -out /etc/letsencrypt/live/strivio-training.space/fullchain.pem -subj "/CN=strivio-training.space"
           docker compose up --build -d
           sleep 10
 
@@ -52,7 +54,7 @@ jobs:
         run: |
           docker compose ps
           docker compose logs
-          curl -k -v http://localhost/api/auth/health || exit 1
-          curl -k -v http://localhost/api/training/health || exit 1
-          curl -k -v http://localhost/api/records/health || exit 1
+          curl -k -f -v https://localhost/api/auth/health || exit 1
+          curl -k -f -v https://localhost/api/training/health || exit 1
+          curl -k -f -v https://localhost/api/records/health || exit 1
           echo "All services are up and running!"
