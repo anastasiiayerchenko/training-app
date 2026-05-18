@@ -3,16 +3,12 @@ services:
   auth-service-blue:
     build: ./auth_service
     container_name: auth-service-blue
-    ports:
-      - "8082:8082"
     volumes:
       - ./auth_service/db:/app/db
 
   training-service-blue:
     build: ./training_service
     container_name: training-service-blue
-    ports:
-      - "8080:8080"
     volumes:
       - ./training_service/db:/app/db
     environment:
@@ -23,8 +19,6 @@ services:
   records-service-blue:
     build: ./records_service
     container_name: records-service-blue
-    ports:
-      - "8081:8081"
     volumes:
       - ./records_service/db:/app/db
     environment:

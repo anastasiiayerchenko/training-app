@@ -757,15 +757,22 @@ document.getElementById('btn-settings-logout').addEventListener('click', () => {
 
 // Delete Account — removes user + all trainings + all records
 document.getElementById('btn-delete-account').addEventListener('click', async () => {
-    const confirmed = confirm(
-        '⚠️ Are you sure you want to delete your account?\n\n' +
+    const password = prompt('⚠️ SECURITY CHECK\nTo prevent unauthorized deletion, please enter your password to confirm:');
+    if (!password) {
+        showToast('Account deletion cancelled.', true);
+        return;
+    }
+
+    if (!confirm(
+        '⚠️ Are you ABSOLUTELY sure?\n\n' +
         'This will permanently delete:\n' +
-        '  • Your account\n' +
-        '  • All your trainings\n' +
-        '  • All your personal records\n\n' +
-        'This action cannot be undone!'
-    );
-    if (!confirmed) return;
+        '- Your profile\n' +
+        '- All your generated training programs\n' +
+        '- All your personal records\n\n' +
+        'This action CANNOT be undone!'
+    )) {
+        return;
+    }
 
     const btn = document.getElementById('btn-delete-account');
     btn.disabled = true;
@@ -777,21 +784,27 @@ document.getElementById('btn-delete-account').addEventListener('click', async ()
         // 1. Delete all records from records_service
         try {
             await fetch(`${API_URLS.records}/athletes/${userId}/entries`, { method: 'DELETE' });
-        } catch (e) { /* ignore if service is down */ }
+        } catch (e) { console.warn("Failed to delete records", e); }
 
         // 2. Delete all trainings from training_service
         try {
             await fetch(`${API_URLS.training}/athletes/${userId}/trainings`, { method: 'DELETE' });
-        } catch (e) { /* ignore if service is down */ }
+        } catch (e) { console.warn("Failed to delete trainings", e); }
 
         // 3. Delete the user account from auth_service
-        await apiCall('auth', `/users/${userId}`, 'DELETE');
+        // Sending the password in the body to prevent IDOR attacks
+        const response = await fetch(`${API_URLS.auth}/users/${userId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: password })
+        });
+
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.error || 'Failed to delete account');
+        }
 
         showToast('Account deleted. Goodbye! 👋');
-        closeSettings();
-
-        // Reset and return to landing
-        currentUser = null;
         document.getElementById('login-username').value = '';
         document.getElementById('login-password').value = '';
         document.getElementById('reg-fname').value = '';

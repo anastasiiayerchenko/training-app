@@ -166,16 +166,51 @@ public:
 
         // DELETE /users/:id — delete account
         server.Delete(R"(/users/(\d+))", [this](const httplib::Request& req, httplib::Response& res) {
-            int id = stoi(req.matches[1]);
-            bool deleted = service->deleteAccount(id);
+            try {
+                int id = stoi(req.matches[1]);
+                json body = json::parse(req.body);
+                
+                if (!body.contains("password")) {
+                    json err = {{"error", "Password is required to delete account"}};
+                    res.status = 401;
+                    res.set_content(err.dump(), "application/json");
+                    return;
+                }
+                
+                string password = body["password"];
+                UserData u = service->getUser(id);
+                if (u.id == -1) {
+                    json err = {{"error", "User not found"}};
+                    res.status = 404;
+                    res.set_content(err.dump(), "application/json");
+                    return;
+                }
+                
+                int auth_id = service->login(u.username, password);
+                if (auth_id != id) {
+                    json err = {{"error", "Incorrect password"}};
+                    res.status = 401;
+                    res.set_content(err.dump(), "application/json");
+                    return;
+                }
 
-            if (deleted) {
-                json response = {{"message", "Account deleted successfully"}, {"id", id}};
-                res.status = 200;
-                res.set_content(response.dump(), "application/json");
-            } else {
-                json err = {{"error", "User not found"}};
-                res.status = 404;
+                bool deleted = service->deleteAccount(id);
+                if (deleted) {
+                    json response = {{"message", "Account deleted successfully"}, {"id", id}};
+                    res.status = 200;
+                    res.set_content(response.dump(), "application/json");
+                } else {
+                    json err = {{"error", "Failed to delete account"}};
+                    res.status = 500;
+                    res.set_content(err.dump(), "application/json");
+                }
+            } catch (const json::exception& e) {
+                json err = {{"error", "Invalid JSON body or missing password"}};
+                res.status = 400;
+                res.set_content(err.dump(), "application/json");
+            } catch (const exception& e) {
+                json err = {{"error", "Internal server error"}};
+                res.status = 500;
                 res.set_content(err.dump(), "application/json");
             }
         });
