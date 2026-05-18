@@ -52,7 +52,7 @@ jobs:
         run: |
           docker compose ps
           docker compose logs
-          curl -v http://localhost:8082/health || exit 1
-          curl -v http://localhost:8080/health || exit 1
-          curl -v http://localhost:8081/health || exit 1
+          curl -k -v http://localhost/api/auth/health || exit 1
+          curl -k -v http://localhost/api/training/health || exit 1
+          curl -k -v http://localhost/api/records/health || exit 1
           echo "All services are up and running!"
