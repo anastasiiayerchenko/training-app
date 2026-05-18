@@ -5,6 +5,9 @@ services:
     container_name: auth-service-blue
     volumes:
       - ./auth_service/db:/app/db
+    environment:
+      - TRAINING_SERVICE_URL=http://training-service-blue:8080
+      - RECORDS_SERVICE_URL=http://records-service-blue:8081
 
   training-service-blue:
     build: ./training_service
@@ -50,6 +53,9 @@ services:
       - "9082:8082"
     volumes:
       - ./auth_service/db:/app/db
+    environment:
+      - TRAINING_SERVICE_URL=http://training-service-green:9080
+      - RECORDS_SERVICE_URL=http://records-service-green:9081
     profiles:
       - green
 

@@ -13,10 +13,14 @@ class AuthApiController {
 private:
     AuthService* service;
     httplib::Server server;
+    string trainingServiceUrl;
+    string recordsServiceUrl;
 
 public:
-    AuthApiController(AuthService* srv) {
+    AuthApiController(AuthService* srv, string tsUrl = "http://localhost:8080", string rsUrl = "http://localhost:8081") {
         service = srv;
+        trainingServiceUrl = tsUrl;
+        recordsServiceUrl = rsUrl;
     }
 
     void setupRoutes() {
@@ -192,6 +196,19 @@ public:
                     res.status = 401;
                     res.set_content(err.dump(), "application/json");
                     return;
+                }
+
+                // Internal Cascade Deletion (Bypassing Nginx Blocks)
+                httplib::Client tsCli(trainingServiceUrl);
+                auto resTs = tsCli.Delete("/athletes/" + to_string(id) + "/trainings");
+                if (!resTs || resTs->status != 200) {
+                    cout << "[AuthService] Warning: Failed to cascade delete trainings for user " << id << "\n";
+                }
+
+                httplib::Client rsCli(recordsServiceUrl);
+                auto resRs = rsCli.Delete("/athletes/" + to_string(id) + "/entries");
+                if (!resRs || resRs->status != 200) {
+                    cout << "[AuthService] Warning: Failed to cascade delete records for user " << id << "\n";
                 }
 
                 bool deleted = service->deleteAccount(id);

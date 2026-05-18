@@ -116,7 +116,13 @@ int main() {
 
     AuthService* appService = container.resolve<AuthService>();
 
-    AuthApiController api(appService);
+    const char* tsUrlEnv = getenv("TRAINING_SERVICE_URL");
+    string tsUrl = tsUrlEnv ? tsUrlEnv : "http://localhost:8080";
+    
+    const char* rsUrlEnv = getenv("RECORDS_SERVICE_URL");
+    string rsUrl = rsUrlEnv ? rsUrlEnv : "http://localhost:8081";
+
+    AuthApiController api(appService, tsUrl, rsUrl);
     api.setupRoutes();
     api.start(8082);
 
