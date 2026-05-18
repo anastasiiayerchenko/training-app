@@ -1,19 +1,29 @@
 # Training System — Microservices Architecture
 
-Personalized Training System — A distributed C++ REST microservice architecture with SQLite databases, IoC/DI, CI/CD pipelines, and Docker Blue-Green deployment.
+Personalized Training System — A distributed C++ REST microservice architecture with a premium glassmorphic frontend, SQLite databases, IoC/DI, CI/CD pipelines, and secure Nginx reverse proxy routing.
 
 ## Architecture Overview
 
-The system has been refactored from a monolith into three independent microservices:
+The system consists of three independent backend microservices and a unified frontend:
 
-1. **Auth Service (Port 8082)** — Manages user registration, authentication, and user profiles.
-2. **Training Service (Port 8080)** — Generates and tracks personalized training programs.
-3. **Records Service (Port 8081)** — Tracks best exercise weights and training history.
+1. **Frontend (Nginx, Port 80/443)** — A premium HTML/CSS/JS glassmorphic single-page application. Handles routing, HTTPS (Let's Encrypt), and DDoS protection.
+2. **Auth Service (Port 8082)** — Manages user registration, authentication, and user profiles.
+3. **Training Service (Port 8080)** — Generates and tracks personalized training programs.
+4. **Records Service (Port 8081)** — Tracks best exercise weights and training history.
 
-Each microservice uses:
+Each backend microservice uses:
 - **HTTP REST API** with JSON responses (`cpp-httplib` + `json.hpp`)
 - **IoC Container** — generic template-based dependency injection
-- **SQLite Database** — separate database file per microservice
+- **SQLite Database** — separate database file per microservice, protected against SQL Injection via **Prepared Statements**.
+
+## Security & Reliability
+
+- **Nginx Rate Limiting (DDoS Protection):** 
+  - `auth-service` limited to 3 req/s per IP to prevent brute-force attacks and bot registration.
+  - Core API endpoints limited to 10-15 req/s.
+  - Configured `client_max_body_size` and timeouts to prevent Slowloris attacks.
+- **SQL Injection Prevention:** All user inputs are sanitized using SQLite Prepared Statements (`sqlite3_prepare_v2` and `sqlite3_bind_text`).
+- **Automated Backups:** A `backup.sh` bash script combined with `cron` automatically backs up the production `users.db` daily, archiving up to 7 days of backups to prevent data loss.
 
 ## API Endpoints
 
@@ -46,26 +56,26 @@ Each microservice uses:
 ## Project Structure
 
 ```
+├── frontend/              # Nginx, HTML/CSS/JS frontend SPA
 ├── auth_service/          # User management microservice
 ├── training_service/      # Training generation microservice
 ├── records_service/       # Records & achievements microservice
 ├── docker-compose.yml     # Blue-Green Docker deployment
+├── backup.sh              # Cron backup script
 ├── .github/workflows/     # CI/CD pipeline
 └── README.md
 ```
 
-Each service directory contains its own `main.cpp`, controllers, domain logic, and `Dockerfile`.
+## Docker Deployment
 
-## Docker & Blue-Green Deployment
-
-The system is fully containerized and uses Docker Compose. We implement a **Blue-Green Deployment** strategy with Docker Compose profiles.
+The system is fully containerized and uses Docker Compose. 
 
 ```bash
-# Start the Blue environment (default)
-docker-compose up -d
+# Start the production environment (Nginx + Microservices)
+docker-compose up -d --build
 
-# Start the Green environment (runs on ports 9080, 9081, 9082)
-docker-compose --profile green up -d
+# Restart Nginx after config changes
+docker-compose restart frontend-blue
 ```
 
 ### CI/CD Pipeline
