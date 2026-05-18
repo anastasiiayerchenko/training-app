@@ -15,6 +15,7 @@ public:
                            string date, int exp) = 0;
   virtual void fillTraining(Training *tr, string muscle, int exp) = 0;
   virtual vector<Training *> getAthleteTrainings(int athlete_id) = 0;
+  virtual void deleteAthleteTrainings(int athlete_id) = 0;
   virtual ~IDatabase() {}
 };
 
@@ -89,6 +90,11 @@ public:
     return history;
   }
 
+
+  void deleteAthleteTrainings(int athlete_id) override {
+    string sql = "DELETE FROM trainings WHERE athlete_id = " + to_string(athlete_id) + ";";
+    sqlite3_exec(db, sql.c_str(), 0, 0, 0);
+  }
 
 };
 

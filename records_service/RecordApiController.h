@@ -116,7 +116,7 @@ public:
             res.set_content(response.dump(), "application/json");
         });
 
-        // DELETE /entries/:id — видалити запис
+        // DELETE /entries/:id — видалити один запис
         server.Delete(R"(/entries/(\d+))", [this](const httplib::Request& req, httplib::Response& res) {
             int id = stoi(req.matches[1]);
             bool deleted = service->deleteEntry(id);
@@ -129,6 +129,15 @@ public:
                 res.status = 404;
                 res.set_content(err.dump(), "application/json");
             }
+        });
+
+        // DELETE /athletes/:id/entries — delete ALL entries for an athlete
+        server.Delete(R"(/athletes/(\d+)/entries)", [this](const httplib::Request& req, httplib::Response& res) {
+            int athlete_id = stoi(req.matches[1]);
+            service->deleteAthleteEntries(athlete_id);
+            json response = {{"message", "All records deleted"}, {"athlete_id", athlete_id}};
+            res.status = 200;
+            res.set_content(response.dump(), "application/json");
         });
 
         // GET /available_exercises/:athlete_id — список доступних вправ

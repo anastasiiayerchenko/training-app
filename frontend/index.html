@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Strivio - Personal Training</title>
+    <link rel="stylesheet" href="css/style.css?v=2.8">
+</head>
+<body class="landing-bg">
+    <div id="toast" class="hidden"></div>
+
+    <!-- MAIN VIEW CONTAINER (Login/Register) -->
+    <div class="mobile-container" id="app-container">
+        <div id="landing-view" class="view">
+            <h1 class="logo">Strivio</h1>
+            <div class="subtitle">
+                A convenient system for generating workouts, keeping an exercise diary, and saving your sports records
+            </div>
+            
+            <div class="auth-card">
+                <div class="form-group register-only hidden">
+                    <label>First Name</label>
+                    <input type="text" id="reg-fname" placeholder="Enter your first name">
+                </div>
+                <div class="form-group register-only hidden">
+                    <label>Last Name</label>
+                    <input type="text" id="reg-lname" placeholder="Enter your last name">
+                </div>
+                <div class="form-group register-only hidden">
+                    <label>Date of Birth</label>
+                    <input type="date" id="reg-dob">
+                </div>
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="login-username" placeholder="Enter your username">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="login-password" placeholder="Enter your password">
+                </div>
+                <button class="btn-glossy" id="btn-auth">Log In</button>
+                <div class="bottom-link">
+                    <a href="#" class="toggle-auth-mode">Don't have an account? Register</a>
+                </div>
+            </div>
+
+            <div class="black-card">
+                <div class="black-card-icon">🏃</div>
+                <div class="black-card-title">Strivio Performance Center</div>
+                <div class="black-card-tags">
+                    <span>Workout Generation</span>
+                    <span>Progress Tracking</span>
+                    <span>Results Analytics</span>
+                </div>
+                <div class="black-card-controls">
+                    <div class="control-btn">↗</div>
+                    <div class="control-btn">→</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PREMIUM PROFILE VIEW (Direct sibling of app-container for true fullscreen coverage) -->
+    <div id="profile-view" class="view hidden">
+        <nav class="top-nav">
+            <div class="nav-brand">Strivio</div>
+            <div class="nav-user">
+                <span id="user-fullname">First Last</span>
+                <div class="user-avatar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </div>
+                <button id="btn-logout" class="logout-btn" title="Log Out">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                </button>
+            </div>
+        </nav>
+        
+        <!-- Dashboard Subview with Dynamic Side-by-Side Sections -->
+        <div class="dashboard-content" id="dashboard-subview">
+            
+            <!-- Section 1: Training History & Details -->
+            <div class="dashboard-section-row" id="training-section-row">
+                <!-- Training History Card -->
+                <div class="training-history-card">
+                    <div class="history-card-header">
+                        <h2 class="history-title">Training History</h2>
+                        <span class="total-trainings-count" id="total-trainings-label">Total Trainings: 0</span>
+                    </div>
+                    
+                    <div class="history-list" id="training-list">
+                        <!-- Dynamically loaded history items -->
+                    </div>
+                    
+                    <button class="btn-create-glow" id="btn-create-training">Create new training</button>
+                </div>
+
+                <!-- Inline Training Detail Card (Shows up side-by-side dynamically) -->
+                <div id="training-modal" class="modal-card hidden">
+                    <div class="modal-header">
+                        <div>
+                            <div id="modal-type" class="modal-title">Workout</div>
+                            <div id="modal-date" class="modal-subtitle">No Details Selected</div>
+                        </div>
+                        <button class="modal-close" id="modal-close">×</button>
+                    </div>
+                    <div id="modal-exercises" class="modal-exercises"></div>
+                </div>
+            </div>
+
+            <!-- Section 2: Personal Records & History Details -->
+            <div class="dashboard-section-row" id="records-section-row">
+                <!-- Personal Records Card -->
+                <div class="records-glass-card">
+                    <h2 class="history-title">Personal Records</h2>
+                    <div class="medals-container" id="medals-list">
+                        <!-- Dynamically loaded personal records -->
+                    </div>
+                    <button class="btn-add-record" id="btn-add-record-trigger">
+                        <span class="plus-icon">+</span> Add personal record
+                    </button>
+                </div>
+
+                <!-- Record Detail Card (Shows up side-by-side dynamically) -->
+                <div id="record-modal" class="modal-card hidden">
+                    <div class="modal-header">
+                        <div>
+                            <div id="record-modal-title" class="modal-title">Record History</div>
+                            <div id="record-modal-exercise" class="modal-subtitle">No Exercise Selected</div>
+                        </div>
+                        <button class="modal-close" id="record-modal-close">×</button>
+                    </div>
+                    <div id="record-modal-history" class="modal-exercises"></div>
+                </div>
+            </div>
+
+            <!-- Bottom Horizontal Motivation Card -->
+            <div class="bottom-motivation-glass-card">
+                <div class="motivation-left-content">
+                    <span class="motivation-accent-tag">Keep Going</span>
+                    <h3 class="motivation-banner-title">Great workouts build a great you.</h3>
+                    <p class="motivation-banner-quote">"Strength doesn't come from what you can do. It comes from overcoming the things you once thought you couldn't."</p>
+                    <button class="btn-see-progress" id="btn-see-progress">
+                        See progress 
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="progress-btn-icon"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    </button>
+                </div>
+                <div class="motivation-right-image">
+                    <img src="images/motivation_barbell.jpg" alt="Athlete Lifting Barbell" class="motivation-banner-img">
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="dashboard-footer">
+                © 2026 Strivio. All rights reserved.
+            </footer>
+        </div>
+
+        <!-- Create Record Modal (Fixed Overlay) -->
+        <div id="create-record-overlay" class="modal-overlay hidden">
+            <div class="modal-card create-record-card">
+                <div class="modal-header">
+                    <div class="modal-title" style="color: white; font-size: 1.25rem; font-weight: 700;">New Personal Record</div>
+                    <button class="modal-close" id="create-record-close" style="background: rgba(255,255,255,0.1); color: white; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer;">×</button>
+                </div>
+                <div class="form-group mt-15" style="margin-top: 15px; position: relative;">
+                    <label style="color: rgba(255,255,255,0.7); display: block; margin-bottom: 8px;">Exercise Name</label>
+                    <div style="position: relative;">
+                        <input type="text" id="record-exercise-input" class="input-glass" placeholder="Type or select exercise..." autocomplete="off" style="width: 100%; box-sizing: border-box; padding-right: 35px;">
+                        <span id="record-exercise-arrow" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.6); cursor: pointer; pointer-events: none; font-size: 0.8rem;">▼</span>
+                    </div>
+                    <div class="dropdown-options hidden" id="available-exercises-list" style="width: 100%;"></div>
+                </div>
+                <div class="form-group" style="margin-top: 15px;">
+                    <label style="color: rgba(255,255,255,0.7); display: block; margin-bottom: 8px;">Weight / Value</label>
+                    <input type="number" id="record-weight-input" class="input-glass" placeholder="e.g. 140" step="0.1" style="width: 100%; box-sizing: border-box;">
+                </div>
+                <div class="form-group" style="margin-top: 15px;">
+                    <label style="color: rgba(255,255,255,0.7); display: block; margin-bottom: 8px;">Date</label>
+                    <input type="date" id="record-date-input" class="input-glass" style="width: 100%; box-sizing: border-box;">
+                </div>
+                <button class="btn-glossy mt-25 w-100" id="btn-submit-record" style="margin-top: 25px; width: 100%;">Save Record</button>
+            </div>
+        </div>
+
+        <!-- Settings Modal (Fixed Overlay) -->
+        <div id="settings-overlay" class="modal-overlay hidden">
+            <div class="settings-panel">
+                <div class="settings-header">
+                    <div class="settings-title">⚙️ Settings</div>
+                    <button class="modal-close settings-close-btn" id="settings-close">×</button>
+                </div>
+
+                <!-- Change Password Section -->
+                <div class="settings-section">
+                    <div class="settings-section-label">🔒 Change Password</div>
+                    <div class="form-group" style="margin-top: 12px;">
+                        <label class="settings-input-label">Current Password</label>
+                        <input type="password" id="settings-old-password" class="input-glass settings-input" placeholder="Enter current password">
+                    </div>
+                    <div class="form-group" style="margin-top: 10px;">
+                        <label class="settings-input-label">New Password</label>
+                        <input type="password" id="settings-new-password" class="input-glass settings-input" placeholder="Enter new password (min 4 chars)">
+                    </div>
+                    <button class="settings-action-btn settings-btn-primary" id="btn-change-password">
+                        Update Password
+                    </button>
+                </div>
+
+                <div class="settings-divider"></div>
+
+                <!-- Logout Section -->
+                <div class="settings-section">
+                    <div class="settings-section-label">🚪 Session</div>
+                    <button class="settings-action-btn settings-btn-secondary" id="btn-settings-logout">
+                        Log Out
+                    </button>
+                </div>
+
+                <div class="settings-divider"></div>
+
+                <!-- Delete Account Section -->
+                <div class="settings-section">
+                    <div class="settings-section-label">⚠️ Danger Zone</div>
+                    <p class="settings-danger-text">This will permanently delete your account, all trainings, and all personal records. This cannot be undone.</p>
+                    <button class="settings-action-btn settings-btn-danger" id="btn-delete-account">
+                        🗑️ Delete My Account
+                    </button>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Create Training Subview (Hidden by default) -->
+        <div class="modal-overlay hidden" id="create-training-subview">
+            <div class="create-training-card">
+                <a href="#" class="back-link" id="btn-back-to-dashboard">← Back</a>
+                
+                <div class="create-header-row">
+                    <div class="form-group-inline">
+                        <label>Training Date</label>
+                        <div class="date-input-wrapper">
+                            <input type="date" id="create-date">
+                        </div>
+                    </div>
+                    
+                    <div class="difficulty-wrapper">
+                        <label>Difficulty</label>
+                        <div class="star-rating" id="star-rating">
+                            <span class="star active" data-value="1">⭐</span>
+                            <span class="star active" data-value="2">⭐</span>
+                            <span class="star active" data-value="3">⭐</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="focus-selector">
+                    <div class="focus-pill" data-value="Cardio" id="pill-cardio">
+                        <span class="focus-icon">❤️</span>
+                        <span class="focus-text">Cardio Focus</span>
+                    </div>
+                    <div class="focus-pill active" data-value="Strength" id="pill-strength">
+                        <span class="focus-icon">🏋️</span>
+                        <span class="focus-text">Strength Focus</span>
+                    </div>
+                    <div class="focus-pill" data-value="Fullbody" id="pill-fullbody">
+                        <span class="focus-icon">🤸</span>
+                        <span class="focus-text">Fullbody Focus</span>
+                    </div>
+                </div>
+                
+                <div class="form-group" id="muscle-group-container">
+                    <label style="margin-bottom:8px; display:block; color: rgba(255, 255, 255, 0.8); font-weight: 600;">Muscle Group</label>
+                    <div class="custom-dropdown" id="muscle-dropdown">
+                        <div class="dropdown-trigger" id="dropdown-trigger">
+                            <div class="dropdown-selected-content">
+                                <div class="muscle-icon-circle" id="selected-muscle-icon">🏋️</div>
+                                <span id="selected-muscle-text">Chest</span>
+                            </div>
+                            <span class="dropdown-arrow">▼</span>
+                        </div>
+                        <div class="dropdown-options hidden" id="dropdown-options">
+                            <div class="dropdown-option" data-value="chest">
+                                <div class="muscle-icon-circle">🏋️</div>
+                                <span>Chest</span>
+                            </div>
+                            <div class="dropdown-option" data-value="arms">
+                                <div class="muscle-icon-circle">💪</div>
+                                <span>Arms</span>
+                            </div>
+                            <div class="dropdown-option" data-value="legs">
+                                <div class="muscle-icon-circle">🦵</div>
+                                <span>Legs</span>
+                            </div>
+                            <div class="dropdown-option" data-value="glutes & quads">
+                                <div class="muscle-icon-circle">🍑</div>
+                                <span>Glutes & Quads</span>
+                            </div>
+                            <div class="dropdown-option" data-value="glutes & hamstrings">
+                                <div class="muscle-icon-circle">🍑</div>
+                                <span>Glutes & Hamstrings</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="btn-glossy mt-25 w-100" id="btn-confirm-create">Confirm Workout</button>
+            </div>
+        </div>
+
+        <!-- Floating Sidebar Menu Navigation -->
+        <div class="floating-sidebar-menu">
+            <div class="sidebar-icon-btn active" id="btn-sidebar-home" title="Dashboard">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+            </div>
+            <div class="sidebar-icon-btn" id="btn-sidebar-add" title="New Workout">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+            </div>
+            <div class="sidebar-icon-btn" id="btn-sidebar-analytics" title="Analytics">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+            </div>
+            <div class="sidebar-icon-btn" id="btn-sidebar-settings" title="Settings">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js?v=2.8"></script>
+</body>
+</html>

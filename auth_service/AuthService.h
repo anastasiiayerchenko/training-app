@@ -13,17 +13,14 @@ private:
 public:
     AuthService(IAuthDatabase* database) { db = database; }
 
-    int registerUser(string first_name, string last_name, string username, int age, string password) {
-        if (first_name.empty() || last_name.empty() || username.empty() || password.empty()) {
+    int registerUser(string first_name, string last_name, string username, string dob, string password) {
+        if (first_name.empty() || last_name.empty() || username.empty() || password.empty() || dob.empty()) {
             throw invalid_argument("All fields are required");
-        }
-        if (age < 5 || age > 120) {
-            throw invalid_argument("Invalid age");
         }
         if (db->isUsernameTaken(username)) {
             throw invalid_argument("Username is already taken");
         }
-        return db->registerUser(first_name, last_name, username, age, password);
+        return db->registerUser(first_name, last_name, username, dob, password);
     }
 
     int login(string username, string password) {
@@ -35,6 +32,24 @@ public:
 
     UserData getUser(int id) {
         return db->getUser(id);
+    }
+
+    bool changePassword(int id, string old_password, string new_password) {
+        if (old_password.empty() || new_password.empty()) {
+            throw invalid_argument("Both old and new passwords are required");
+        }
+        if (new_password.size() < 4) {
+            throw invalid_argument("New password must be at least 4 characters");
+        }
+        bool changed = db->changePassword(id, old_password, new_password);
+        if (!changed) {
+            throw invalid_argument("Current password is incorrect");
+        }
+        return true;
+    }
+
+    bool deleteAccount(int id) {
+        return db->deleteAccount(id);
     }
 };
 

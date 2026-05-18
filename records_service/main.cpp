@@ -45,6 +45,14 @@ public:
         return false;
     }
 
+    void deleteAthleteEntries(int athlete_id) override {
+        vector<Record> remaining;
+        for (const auto& r : data) {
+            if (r.athlete_id != athlete_id) remaining.push_back(r);
+        }
+        data = remaining;
+    }
+
     vector<string> getRecordedExercises(int athlete_id) override {
         set<string> unique_ex;
         for (const auto& r : data) {

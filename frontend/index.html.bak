@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Strivio - Personal Training</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="landing-bg">
+    <div id="toast" class="hidden"></div>
+
+    <div class="mobile-container" id="app-container">
+        <!-- MAIN VIEW (Login/Register) -->
+        <div id="landing-view" class="view">
+            <h1 class="logo">Strivio</h1>
+            <div class="subtitle">
+                A convenient system for generating workouts, keeping an exercise diary, and saving your sports records
+            </div>
+            
+            <div class="auth-card">
+                <div class="form-group register-only hidden">
+                    <label>First Name</label>
+                    <input type="text" id="reg-fname" placeholder="Enter your first name">
+                </div>
+                <div class="form-group register-only hidden">
+                    <label>Last Name</label>
+                    <input type="text" id="reg-lname" placeholder="Enter your last name">
+                </div>
+                <div class="form-group register-only hidden">
+                    <label>Date of Birth</label>
+                    <input type="date" id="reg-dob">
+                </div>
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="login-username" placeholder="Enter your username">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="login-password" placeholder="Enter your password">
+                </div>
+                <div class="auth-links">
+                    <a href="#" id="forgot-pass-link">Forgot password?</a>
+                    <a href="#" class="toggle-auth-mode">Don't have an account? Register</a>
+                </div>
+                <button class="btn-glossy" id="btn-auth">Log In</button>
+                <div class="bottom-link">
+                    <a href="#" class="toggle-auth-mode">Don't have an account? Register</a>
+                </div>
+            </div>
+
+
+
+            <div class="black-card">
+                <div class="black-card-icon">🏃</div>
+                <div class="black-card-title">Strivio Performance Center</div>
+                <div class="black-card-tags">
+                    <span>Workout Generation</span>
+                    <span>Progress Tracking</span>
+                    <span>Results Analytics</span>
+                </div>
+                <div class="black-card-controls">
+                    <div class="control-btn">↗</div>
+                    <div class="control-btn">→</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- HIDDEN PROFILE VIEW -->
+        <div id="profile-view" class="view hidden">
+            <nav class="top-nav">
+                <div class="nav-brand">Strivio</div>
+                <div class="nav-user">
+                    <span id="user-fullname">First Last</span>
+                    <div class="user-avatar">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    </div>
+                    <button id="btn-logout" class="logout-btn" title="Log Out">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    </button>
+                </div>
+            </nav>
+            
+            <div class="dashboard-content" id="dashboard-subview">
+                <div class="training-history-card">
+                    <h2 class="history-title">Training History</h2>
+                    
+                    <div class="history-list" id="training-list">
+                        <!-- Mock data for now -->
+                        <div class="history-item">
+                            <div class="history-icon">🏋️</div>
+                            <div class="history-info">
+                                <div class="history-category">Strength</div>
+                                <div class="history-date">14.09.2023</div>
+                            </div>
+                            <div class="history-arrow">›</div>
+                        </div>
+                        <div class="history-item">
+                            <div class="history-icon">🏃</div>
+                            <div class="history-info">
+                                <div class="history-category">Cardio</div>
+                                <div class="history-date">24.09.2023</div>
+                            </div>
+                            <div class="history-arrow">›</div>
+                        </div>
+                        <div class="history-item">
+                            <div class="history-icon">🤸</div>
+                            <div class="history-info">
+                                <div class="history-category">Fullbody</div>
+                                <div class="history-date">28.09.2023</div>
+                            </div>
+                            <div class="history-arrow">›</div>
+                        </div>
+                    </div>
+                    
+                    <button class="btn-glossy mt-15" id="btn-create-training">Create new training</button>
+                </div>
+
+                <!-- Training Detail Modal -->
+                <div id="training-modal" class="modal-card hidden">
+                    <div class="modal-header">
+                        <div>
+                            <div id="modal-type" class="modal-title"></div>
+                            <div id="modal-date" class="modal-subtitle"></div>
+                        </div>
+                        <button class="modal-close" id="modal-close">×</button>
+                    </div>
+                    <div id="modal-exercises" class="modal-exercises"></div>
+                </div>
+            </div>
+
+            <!-- Create Training Subview -->
+            <div class="dashboard-content hidden" id="create-training-subview">
+                <div class="create-training-card">
+                    <a href="#" class="back-link" id="btn-back-to-dashboard">← Back</a>
+                    
+                    <div class="create-header-row">
+                        <div class="form-group-inline">
+                            <label>Training Date</label>
+                            <div class="date-input-wrapper">
+                                <input type="date" id="create-date">
+                            </div>
+                        </div>
+                        
+                        <div class="difficulty-wrapper">
+                            <label>Difficulty</label>
+                            <div class="star-rating" id="star-rating">
+                                <span class="star active" data-value="1">⭐</span>
+                                <span class="star active" data-value="2">⭐</span>
+                                <span class="star active" data-value="3">⭐</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="focus-selector">
+                        <div class="focus-pill" data-value="Cardio" id="pill-cardio">
+                            <span class="focus-icon">❤️</span>
+                            <span class="focus-text">Cardio Focus</span>
+                        </div>
+                        <div class="focus-pill active" data-value="Strength" id="pill-strength">
+                            <span class="focus-icon">🏋️</span>
+                            <span class="focus-text">Strength Focus</span>
+                        </div>
+                        <div class="focus-pill" data-value="Fullbody" id="pill-fullbody">
+                            <span class="focus-icon">🤸</span>
+                            <span class="focus-text">Fullbody Focus</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" id="muscle-group-container">
+                        <label style="margin-bottom:8px; display:block;">Muscle Group</label>
+                        <div class="custom-dropdown" id="muscle-dropdown">
+                            <div class="dropdown-trigger" id="dropdown-trigger">
+                                <div class="dropdown-selected-content">
+                                    <div class="muscle-icon-circle" id="selected-muscle-icon">🏋️</div>
+                                    <span id="selected-muscle-text">Chest</span>
+                                </div>
+                                <span class="dropdown-arrow">▼</span>
+                            </div>
+                            <div class="dropdown-options hidden" id="dropdown-options">
+                                <div class="dropdown-option" data-value="chest">
+                                    <div class="muscle-icon-circle">🏋️</div>
+                                    <span>Chest</span>
+                                </div>
+                                <div class="dropdown-option" data-value="arms">
+                                    <div class="muscle-icon-circle">💪</div>
+                                    <span>Arms</span>
+                                </div>
+                                <div class="dropdown-option" data-value="legs">
+                                    <div class="muscle-icon-circle">🦵</div>
+                                    <span>Legs</span>
+                                </div>
+                                <div class="dropdown-option" data-value="glutes & quads">
+                                    <div class="muscle-icon-circle">🍑</div>
+                                    <span>Glutes & Quads</span>
+                                </div>
+                                <div class="dropdown-option" data-value="glutes & hamstrings">
+                                    <div class="muscle-icon-circle">🍑</div>
+                                    <span>Glutes & Hamstrings</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="btn-glossy mt-25 w-100" id="btn-confirm-create">Confirm Workout</button>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

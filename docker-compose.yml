@@ -34,6 +34,20 @@ services:
       - training-service-blue
       - auth-service-blue
 
+  frontend-blue:
+    build: ./frontend
+    container_name: frontend-blue
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./frontend:/usr/share/nginx/html
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on:
+      - auth-service-blue
+      - training-service-blue
+      - records-service-blue
+
   # GREEN ENVIRONMENT
   auth-service-green:
     build: ./auth_service
@@ -72,5 +86,17 @@ services:
     depends_on:
       - training-service-green
       - auth-service-green
+    profiles:
+      - green
+
+  frontend-green:
+    build: ./frontend
+    container_name: frontend-green
+    ports:
+      - "9000:80"
+    depends_on:
+      - auth-service-green
+      - training-service-green
+      - records-service-green
     profiles:
       - green

@@ -27,6 +27,7 @@ public:
     }
     void fillTrainingData(Training* tr, string muscle, int exp) { db->fillTraining(tr, muscle, exp); }
     vector<Training*> getTrainings(int id) { return db->getAthleteTrainings(id); }
+    void deleteAthleteTrainings(int athlete_id) { db->deleteAthleteTrainings(athlete_id); }
     string getAthleteName(int id) {
         httplib::Client cli(authServiceUrl);
         auto res = cli.Get("/users/" + to_string(id));

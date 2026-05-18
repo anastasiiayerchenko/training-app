@@ -13,6 +13,7 @@ public:
     virtual vector<Record> getHistory(int athlete_id, string exercise_name) = 0;
     virtual vector<BestRecord> getBestRecords(int athlete_id) = 0;
     virtual bool deleteEntry(int id) = 0;
+    virtual void deleteAthleteEntries(int athlete_id) = 0;
     virtual vector<string> getRecordedExercises(int athlete_id) = 0;
     virtual ~IRecordDatabase() {}
 };
@@ -83,6 +84,11 @@ public:
         string sql = "DELETE FROM entries WHERE id = " + to_string(id) + ";";
         sqlite3_exec(db, sql.c_str(), 0, 0, 0);
         return sqlite3_changes(db) > 0;
+    }
+
+    void deleteAthleteEntries(int athlete_id) override {
+        string sql = "DELETE FROM entries WHERE athlete_id = " + to_string(athlete_id) + ";";
+        sqlite3_exec(db, sql.c_str(), 0, 0, 0);
     }
 
     vector<string> getRecordedExercises(int athlete_id) override {

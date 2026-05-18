@@ -22,7 +22,7 @@ public:
     void setupRoutes() {
         server.set_default_headers({
             {"Access-Control-Allow-Origin", "*"},
-            {"Access-Control-Allow-Methods", "GET, POST, OPTIONS"},
+            {"Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS"},
             {"Access-Control-Allow-Headers", "Content-Type"}
         });
 
@@ -39,7 +39,7 @@ public:
             try {
                 json body = json::parse(req.body);
                 if (!body.contains("first_name") || !body.contains("last_name") || 
-                    !body.contains("username") || !body.contains("age") || !body.contains("password")) {
+                    !body.contains("username") || !body.contains("dob") || !body.contains("password")) {
                     json err = {{"error", "Missing fields"}};
                     res.status = 400;
                     res.set_content(err.dump(), "application/json");
@@ -49,10 +49,10 @@ public:
                 string first_name = body["first_name"].get<string>();
                 string last_name = body["last_name"].get<string>();
                 string username = body["username"].get<string>();
-                int age = body["age"].get<int>();
+                string dob = body["dob"].get<string>();
                 string password = body["password"].get<string>();
 
-                int id = service->registerUser(first_name, last_name, username, age, password);
+                int id = service->registerUser(first_name, last_name, username, dob, password);
                 json response = {{"id", id}, {"username", username}, {"message", "Registered successfully"}};
                 res.status = 201;
                 res.set_content(response.dump(), "application/json");
@@ -64,6 +64,10 @@ public:
             } catch (const json::exception& e) {
                 json err = {{"error", "Invalid JSON body"}};
                 res.status = 400;
+                res.set_content(err.dump(), "application/json");
+            } catch (const exception& e) {
+                json err = {{"error", string("Server error: ") + e.what()}};
+                res.status = 500;
                 res.set_content(err.dump(), "application/json");
             }
         });
@@ -100,6 +104,10 @@ public:
                 json err = {{"error", "Invalid JSON body"}};
                 res.status = 400;
                 res.set_content(err.dump(), "application/json");
+            } catch (const exception& e) {
+                json err = {{"error", string("Server error: ") + e.what()}};
+                res.status = 500;
+                res.set_content(err.dump(), "application/json");
             }
         });
 
@@ -113,8 +121,56 @@ public:
                     {"first_name", u.first_name},
                     {"last_name", u.last_name},
                     {"username", u.username},
-                    {"age", u.age}
+                    {"dob", u.dob}
                 };
+                res.status = 200;
+                res.set_content(response.dump(), "application/json");
+            } else {
+                json err = {{"error", "User not found"}};
+                res.status = 404;
+                res.set_content(err.dump(), "application/json");
+            }
+        });
+
+        // PUT /users/:id/password — change password
+        server.Put(R"(/users/(\d+)/password)", [this](const httplib::Request& req, httplib::Response& res) {
+            try {
+                int id = stoi(req.matches[1]);
+                json body = json::parse(req.body);
+
+                if (!body.contains("old_password") || !body.contains("new_password")) {
+                    json err = {{"error", "Missing fields: old_password, new_password"}};
+                    res.status = 400;
+                    res.set_content(err.dump(), "application/json");
+                    return;
+                }
+
+                string old_password = body["old_password"].get<string>();
+                string new_password = body["new_password"].get<string>();
+
+                service->changePassword(id, old_password, new_password);
+                json response = {{"message", "Password changed successfully"}};
+                res.status = 200;
+                res.set_content(response.dump(), "application/json");
+
+            } catch (const invalid_argument& e) {
+                json err = {{"error", e.what()}};
+                res.status = 400;
+                res.set_content(err.dump(), "application/json");
+            } catch (const json::exception& e) {
+                json err = {{"error", "Invalid JSON body"}};
+                res.status = 400;
+                res.set_content(err.dump(), "application/json");
+            }
+        });
+
+        // DELETE /users/:id — delete account
+        server.Delete(R"(/users/(\d+))", [this](const httplib::Request& req, httplib::Response& res) {
+            int id = stoi(req.matches[1]);
+            bool deleted = service->deleteAccount(id);
+
+            if (deleted) {
+                json response = {{"message", "Account deleted successfully"}, {"id", id}};
                 res.status = 200;
                 res.set_content(response.dump(), "application/json");
             } else {
@@ -129,10 +185,12 @@ public:
         cout << "\n\tAuth Service - Microservice\n";
         cout << "Server listening on http://0.0.0.0:" << port << "\n";
         cout << "Endpoints:\n";
-        cout << "  GET  /health\n";
-        cout << "  POST /register\n";
-        cout << "  POST /login\n";
-        cout << "  GET  /users/:id\n\n";
+        cout << "  GET    /health\n";
+        cout << "  POST   /register\n";
+        cout << "  POST   /login\n";
+        cout << "  GET    /users/:id\n";
+        cout << "  PUT    /users/:id/password\n";
+        cout << "  DELETE /users/:id\n\n";
         server.listen("0.0.0.0", port);
     }
 };

@@ -49,6 +49,10 @@ public:
         return db->deleteEntry(id);
     }
 
+    void deleteAthleteEntries(int athlete_id) {
+        db->deleteAthleteEntries(athlete_id);
+    }
+
     vector<string> getAvailableExercises(int athlete_id) {
         unordered_set<string> unique_exercises;
 

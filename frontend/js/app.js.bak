@@ -1,0 +1,384 @@
+// Configuration
+const API_URLS = {
+    auth: 'http://localhost:8082',
+    training: 'http://localhost:8080',
+    records: 'http://localhost:8081'
+};
+
+// State
+let currentUser = null;
+let isLoginMode = true; // Default to Login Mode
+
+// DOM Elements
+const views = {
+    landing: document.getElementById('landing-view'),
+    profile: document.getElementById('profile-view')
+};
+
+const btnAuth = document.getElementById('btn-auth');
+const toggleLinks = document.querySelectorAll('.toggle-auth-mode');
+const registerOnlyFields = document.querySelectorAll('.register-only');
+const toastEl = document.getElementById('toast');
+
+// Utility Functions
+function showToast(message, isError = false) {
+    toastEl.textContent = message;
+    toastEl.style.background = isError ? '#ff4d4f' : '#52c41a';
+    toastEl.style.display = 'block';
+    setTimeout(() => {
+        toastEl.style.display = 'none';
+    }, 3000);
+}
+
+function switchView(viewName) {
+    Object.values(views).forEach(v => v.classList.add('hidden'));
+    views[viewName].classList.remove('hidden');
+    
+    // Smoothly apply/remove premium landing page background image
+    if (viewName === 'landing') {
+        document.body.classList.add('landing-bg');
+    } else {
+        document.body.classList.remove('landing-bg');
+    }
+}
+
+// Toggle Auth Mode (Login vs Register)
+function toggleAuthMode(e) {
+    if (e) e.preventDefault();
+    isLoginMode = !isLoginMode;
+    
+    if (isLoginMode) {
+        btnAuth.textContent = 'Log In';
+        toggleLinks.forEach(link => link.textContent = "Don't have an account? Register");
+        registerOnlyFields.forEach(field => field.classList.add('hidden'));
+    } else {
+        btnAuth.textContent = 'Register';
+        toggleLinks.forEach(link => link.textContent = 'Already have an account? Log In');
+        registerOnlyFields.forEach(field => field.classList.remove('hidden'));
+    }
+}
+
+toggleLinks.forEach(link => link.addEventListener('click', toggleAuthMode));
+
+// API Call Wrapper
+async function apiCall(service, endpoint, method = 'GET', body = null) {
+    const url = `${API_URLS[service]}${endpoint}`;
+    const options = {
+        method,
+        headers: { 'Content-Type': 'application/json' }
+    };
+    if (body) {
+        options.body = JSON.stringify(body);
+    }
+
+    try {
+        const response = await fetch(url, options);
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || 'API Error');
+        }
+        return data;
+    } catch (error) {
+        showToast(error.message, true);
+        throw error;
+    }
+}
+
+// Authentication
+btnAuth.addEventListener('click', async () => {
+    const username = document.getElementById('login-username').value;
+    const password = document.getElementById('login-password').value;
+
+    if (!username || !password) {
+        showToast('Please enter username and password', true);
+        return;
+    }
+
+    try {
+        if (isLoginMode) {
+            // LOGIN
+            const data = await apiCall('auth', '/login', 'POST', { username, password });
+            currentUser = data;
+            showToast(`Welcome, ${data.username}!`);
+            await loadProfile();
+            switchView('profile');
+        } else {
+            // REGISTER
+            const fname = document.getElementById('reg-fname').value;
+            const lname = document.getElementById('reg-lname').value;
+            const dob = document.getElementById('reg-dob').value;
+            
+            if (!fname || !lname || !dob) {
+                showToast("Please fill in all required fields for registration", true);
+                return;
+            }
+
+            const body = {
+                first_name: fname,
+                last_name: lname,
+                dob: dob,
+                username: username,
+                password: password
+            };
+            
+            await apiCall('auth', '/register', 'POST', body);
+            showToast('Registration successful! Logging in...');
+            // Auto login after register
+            const loginData = await apiCall('auth', '/login', 'POST', { username, password });
+            currentUser = loginData;
+            await loadProfile();
+            switchView('profile');
+        }
+    } catch (e) {
+        // Error is handled in apiCall
+    }
+});
+
+// Load Profile
+async function loadProfile() {
+    if (!currentUser) return;
+    try {
+        const user = await apiCall('auth', `/users/${currentUser.id}`);
+        document.getElementById('user-fullname').textContent = `${user.first_name} ${user.last_name}`;
+        
+        await loadTrainings();
+    } catch (e) {}
+}
+
+async function loadTrainings() {
+    const listEl = document.getElementById('training-list');
+    listEl.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-light);">Loading...</div>';
+    
+    try {
+        const data = await apiCall('training', `/athletes/${currentUser.id}/trainings`);
+        const trainings = data.trainings || [];
+        if (!trainings || trainings.length === 0) {
+            listEl.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-light); opacity: 0.6; font-style: italic;">You don\'t have any trainings yet</div>';
+            return;
+        }
+        
+        listEl.innerHTML = '';
+        trainings.forEach((tr, index) => {
+            let icon = '🏋️';
+            if (tr.type && tr.type.toLowerCase().includes('cardio')) icon = '🏃';
+            if (tr.type && tr.type.toLowerCase().includes('full')) icon = '🤸';
+            
+            const item = document.createElement('div');
+            item.className = 'history-item';
+            item.innerHTML = `
+                <div class="history-icon">${icon}</div>
+                <div class="history-info">
+                    <div class="history-category">${tr.type || 'Workout'}</div>
+                    <div class="history-date">${tr.date || 'No Date'}</div>
+                </div>
+                <div class="history-arrow">›</div>
+            `;
+            item.addEventListener('click', () => showTrainingModal(tr, item));
+            listEl.appendChild(item);
+        });
+    } catch (e) {
+        listEl.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-light); opacity: 0.6; font-style: italic;">You don\'t have any trainings yet</div>';
+    }
+}
+
+function showTrainingModal(tr, activeItem) {
+    // Highlight selected row
+    document.querySelectorAll('.history-item').forEach(el => el.classList.remove('active'));
+    if (activeItem) activeItem.classList.add('active');
+
+    document.getElementById('modal-type').textContent = 'Workout';
+    const muscle = tr.muscle && tr.muscle !== '-' ? ` • ${tr.muscle}` : '';
+    document.getElementById('modal-date').textContent = `${tr.type}${muscle} • ${tr.date || ''}`;
+    
+    const exEl = document.getElementById('modal-exercises');
+    const exercises = tr.exercises || [];
+    
+    const icons = { 'Strength': '🏋️', 'Cardio': '🏃', 'Fullbody': '🤸' };
+    const icon = icons[tr.type] || '🏋️';
+    
+    if (exercises.length === 0) {
+        exEl.innerHTML = '<div class="modal-empty">No exercises</div>';
+    } else {
+        exEl.innerHTML = exercises.map(ex => {
+            let details = '';
+            if (ex.sets && ex.reps) details = `${ex.sets} sets × ${ex.reps} reps`;
+            else if (ex.duration) details = ex.duration;
+            return `
+                <div class="modal-exercise-item">
+                    <div class="modal-exercise-icon">${icon}</div>
+                    <div>
+                        <div class="modal-exercise-name">${ex.name}</div>
+                        ${details ? `<div class="modal-exercise-details">${details}</div>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+    
+    document.getElementById('training-modal').classList.remove('hidden');
+}
+
+function closeTrainingModal() {
+    document.getElementById('training-modal').classList.add('hidden');
+}
+
+document.getElementById('modal-close').addEventListener('click', closeTrainingModal);
+
+document.getElementById('btn-logout').addEventListener('click', () => {
+    currentUser = null;
+    document.getElementById('login-username').value = '';
+    document.getElementById('login-password').value = '';
+    document.getElementById('reg-fname').value = '';
+    document.getElementById('reg-lname').value = '';
+    document.getElementById('reg-dob').value = '';
+    switchView('landing');
+    if (!isLoginMode) toggleAuthMode(); // Reset to login mode
+});
+
+// Create Training State
+let selectedExp = 3;
+let selectedFocus = "Strength";
+let selectedMuscle = "chest";
+
+// Star Rating logic
+document.querySelectorAll('#star-rating .star').forEach(star => {
+    star.addEventListener('click', () => {
+        selectedExp = parseInt(star.getAttribute('data-value'));
+        updateStars();
+    });
+});
+
+function updateStars() {
+    document.querySelectorAll('#star-rating .star').forEach(s => {
+        const val = parseInt(s.getAttribute('data-value'));
+        if (val <= selectedExp) {
+            s.classList.add('active');
+        } else {
+            s.classList.remove('active');
+        }
+    });
+}
+
+// Focus Pill Selector logic
+document.querySelectorAll('.focus-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+        selectedFocus = pill.getAttribute('data-value');
+        updateFocusSelector();
+    });
+});
+
+function updateFocusSelector() {
+    document.querySelectorAll('.focus-pill').forEach(p => {
+        if (p.getAttribute('data-value') === selectedFocus) {
+            p.classList.add('active');
+        } else {
+            p.classList.remove('active');
+        }
+    });
+    
+    // Show/hide muscle group select only for Strength
+    const muscleContainer = document.getElementById('muscle-group-container');
+    if (selectedFocus === "Strength") {
+        muscleContainer.style.display = 'block';
+    } else {
+        muscleContainer.style.display = 'none';
+    }
+}
+
+// Custom Muscle Dropdown logic
+const dropdownTrigger = document.getElementById('dropdown-trigger');
+const dropdownOptions = document.getElementById('dropdown-options');
+
+dropdownTrigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    dropdownOptions.classList.toggle('hidden');
+});
+
+document.querySelectorAll('.dropdown-option').forEach(option => {
+    option.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const val = option.getAttribute('data-value');
+        const text = option.querySelector('span').textContent;
+        const icon = option.querySelector('.muscle-icon-circle').textContent;
+        updateSelectedMuscle(val, text, icon);
+        dropdownOptions.classList.add('hidden');
+    });
+});
+
+function updateSelectedMuscle(val, text, icon) {
+    selectedMuscle = val;
+    document.getElementById('selected-muscle-text').textContent = text;
+    document.getElementById('selected-muscle-icon').textContent = icon;
+}
+
+document.addEventListener('click', () => {
+    dropdownOptions.classList.add('hidden');
+});
+
+// View Transitions
+document.getElementById('btn-create-training').addEventListener('click', () => {
+    document.getElementById('dashboard-subview').classList.add('hidden');
+    document.getElementById('create-training-subview').classList.remove('hidden');
+    
+    // Set default date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('create-date').value = today;
+    
+    // Reset state to defaults
+    selectedExp = 3;
+    selectedFocus = "Strength";
+    selectedMuscle = "chest";
+    updateStars();
+    updateFocusSelector();
+    updateSelectedMuscle("chest", "Chest", "🏋️");
+});
+
+document.getElementById('btn-back-to-dashboard').addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById('create-training-subview').classList.add('hidden');
+    document.getElementById('dashboard-subview').classList.remove('hidden');
+    loadTrainings();
+});
+
+// Confirm and POST Training logic
+document.getElementById('btn-confirm-create').addEventListener('click', async () => {
+    const dateVal = document.getElementById('create-date').value;
+    if (!dateVal) {
+        showToast('Please select a training date', true);
+        return;
+    }
+
+    // Convert date format from YYYY-MM-DD to DD-MM-YYYY for SQLite mapping
+    const parts = dateVal.split('-');
+    const formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+
+    const body = {
+        type: selectedFocus,
+        date: formattedDate,
+        exp: selectedExp,
+        muscle: selectedFocus === "Strength" ? selectedMuscle : "-"
+    };
+
+    try {
+        const btn = document.getElementById('btn-confirm-create');
+        btn.disabled = true;
+        btn.textContent = 'Creating...';
+        
+        await apiCall('training', `/athletes/${currentUser.id}/trainings`, 'POST', body);
+        
+        showToast('Workout successfully created!');
+        
+        // Return to dashboard immediately
+        document.getElementById('create-training-subview').classList.add('hidden');
+        document.getElementById('dashboard-subview').classList.remove('hidden');
+        
+        // Reload list
+        await loadTrainings();
+    } catch (err) {
+        // Handled in apiCall
+    } finally {
+        const btn = document.getElementById('btn-confirm-create');
+        btn.disabled = false;
+        btn.textContent = 'Confirm Workout';
+    }
+});

@@ -150,16 +150,27 @@ public:
                  json response = {{"athlete", name}, {"trainings", arr}};
                  res.set_content(response.dump(), "application/json");
                });
+
+    // DELETE /athletes/:id/trainings — delete all trainings for an athlete
+    server.Delete(R"(/athletes/(\d+)/trainings)",
+               [this](const httplib::Request &req, httplib::Response &res) {
+                 int athlete_id = stoi(req.matches[1]);
+                 service->deleteAthleteTrainings(athlete_id);
+                 json response = {{"message", "All trainings deleted"}, {"athlete_id", athlete_id}};
+                 res.status = 200;
+                 res.set_content(response.dump(), "application/json");
+               });
   }
 
   void start(int port = 8080) {
     cout << "\n\tPersonalized Training System - Microservice\n";
     cout << "Server listening on http://0.0.0.0:" << port << "\n";
     cout << "Endpoints:\n";
-    cout << "  GET  /health\n";
-    cout << "  GET  /athletes/:id\n";
-    cout << "  POST /athletes/:id/trainings\n";
-    cout << "  GET  /athletes/:id/trainings\n\n";
+    cout << "  GET    /health\n";
+    cout << "  GET    /athletes/:id\n";
+    cout << "  POST   /athletes/:id/trainings\n";
+    cout << "  GET    /athletes/:id/trainings\n";
+    cout << "  DELETE /athletes/:id/trainings\n\n";
     server.listen("0.0.0.0", port);
   }
 };

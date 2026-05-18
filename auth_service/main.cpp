@@ -6,8 +6,8 @@ private:
     vector<string> passwords;
     int nextId = 1;
 public:
-    int registerUser(string first_name, string last_name, string username, int age, string password) override {
-        UserData u = {nextId, first_name, last_name, username, age};
+    int registerUser(string first_name, string last_name, string username, string dob, string password) override {
+        UserData u = {nextId, first_name, last_name, username, dob};
         data.push_back(u);
         passwords.push_back(password);
         return nextId++;
@@ -33,7 +33,31 @@ public:
         for (const auto& u : data) {
             if (u.id == id) return u;
         }
-        return {-1, "", "", "", 0};
+        return {-1, "", "", "", ""};
+    }
+
+    bool changePassword(int id, string old_password, string new_password) override {
+        for (size_t i = 0; i < data.size(); i++) {
+            if (data[i].id == id) {
+                if (passwords[i] == old_password) {
+                    passwords[i] = new_password;
+                    return true;
+                }
+                return false;
+            }
+        }
+        return false;
+    }
+
+    bool deleteAccount(int id) override {
+        for (size_t i = 0; i < data.size(); i++) {
+            if (data[i].id == id) {
+                data.erase(data.begin() + i);
+                passwords.erase(passwords.begin() + i);
+                return true;
+            }
+        }
+        return false;
     }
 };
 
@@ -43,7 +67,7 @@ void runUnitTests() {
     cout << "[TEST] Positive: Register User... ";
     MockAuthDatabase* mockDb1 = new MockAuthDatabase();
     AuthService service1(mockDb1);
-    int id = service1.registerUser("Test", "User", "testuser", 20, "pass");
+    int id = service1.registerUser("Test", "User", "testuser", "2000-01-01", "pass");
     if (id == 1) cout << "SUCCESS\n";
     else cout << "FAILED\n";
     delete mockDb1;
@@ -51,10 +75,10 @@ void runUnitTests() {
     cout << "[TEST] Negative: Duplicate Username... ";
     MockAuthDatabase* mockDb2 = new MockAuthDatabase();
     AuthService service2(mockDb2);
-    service2.registerUser("Test", "User", "testuser", 20, "pass");
+    service2.registerUser("Test", "User", "testuser", "2000-01-01", "pass");
     bool errorCaught = false;
     try {
-        service2.registerUser("Test2", "User2", "testuser", 22, "pass2");
+        service2.registerUser("Test2", "User2", "testuser", "2000-01-01", "pass2");
     } catch (const invalid_argument& e) {
         errorCaught = true;
     }
@@ -65,7 +89,7 @@ void runUnitTests() {
     cout << "[TEST] Positive: Login... ";
     MockAuthDatabase* mockDb3 = new MockAuthDatabase();
     AuthService service3(mockDb3);
-    service3.registerUser("Test", "User", "testuser", 20, "pass");
+    service3.registerUser("Test", "User", "testuser", "2000-01-01", "pass");
     int loginId = service3.login("testuser", "pass");
     if (loginId == 1) cout << "SUCCESS\n";
     else cout << "FAILED\n";
@@ -74,7 +98,7 @@ void runUnitTests() {
     cout << "[TEST] Negative: Invalid Password... ";
     MockAuthDatabase* mockDb4 = new MockAuthDatabase();
     AuthService service4(mockDb4);
-    service4.registerUser("Test", "User", "testuser", 20, "pass");
+    service4.registerUser("Test", "User", "testuser", "2000-01-01", "pass");
     int invalidLoginId = service4.login("testuser", "wrongpass");
     if (invalidLoginId == -1) cout << "SUCCESS\n";
     else cout << "FAILED\n";
