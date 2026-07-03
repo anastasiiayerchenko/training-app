@@ -10,3 +10,7 @@ app
 .vscode/
 .idea/
 *.swp
+
+# Certificates
+certs/
+

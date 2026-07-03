@@ -39,7 +39,7 @@ services:
       - "443:443"
     volumes:
       - ./frontend:/usr/share/nginx/html
-      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - ./certs:/etc/letsencrypt:ro
     depends_on:
       - auth-service-blue
       - training-service-blue
@@ -94,6 +94,9 @@ services:
     container_name: frontend-green
     ports:
       - "9000:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html
+      - ./certs:/etc/letsencrypt:ro
     depends_on:
       - auth-service-green
       - training-service-green
